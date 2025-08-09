@@ -10,6 +10,18 @@ document.addEventListener("DOMContentLoaded", () => {
     .finally(() => hide("#loading"));
 });
 
+card.addEventListener("click", (e) => {
+  if (e.target.closest("a, button, input, textarea, select")) return;
+  toggleCard(card);
+});
+
+card.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.key === " ") { 
+    e.preventDefault(); 
+    toggleCard(card); 
+  }
+});
+
 // Load & parse
 async function loadPostsList() {
   const indexUrl = `${POSTS_DIR}/${INDEX_FILE}`;
