@@ -1,8 +1,8 @@
-// ---- Settings (adjust if you change folder names) ----
+// Settings
 const POSTS_DIR = "posts";
 const INDEX_FILE = "postindex.txt";
 
-// ---- Boot ----
+// Boot
 document.addEventListener("DOMContentLoaded", () => {
   loadPostsList()
     .then(renderAll)
@@ -10,15 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
     .finally(() => hide("#loading"));
 });
 
-// ---- Load & parse ----
+// Load & parse
 async function loadPostsList() {
   const indexUrl = `${POSTS_DIR}/${INDEX_FILE}`;
   const text = await fetchText(indexUrl);
-  // Allow blank lines and comments (# …)
   const files = text.split(/\r?\n/)
     .map(l => l.trim())
-    .filter(l => l && !l.startsWith("#"));
-  // Fetch posts in this explicit order
+    .filter(l => l && !l.startsWith("#")); // allow comments
+
   const posts = [];
   for (const filename of files) {
     const url = `${POSTS_DIR}/${filename}`;
@@ -45,62 +44,72 @@ async function fetchText(url) {
   return res.text();
 }
 
-// ---- Post format parser ----
-// Expected .txt format:
+// Post format parser
+
+// Header (any order, case-insensitive):
+// title: First Post!
+// previewtext: This is the first post. click to read more...
 // written: 09 Aug, 2025
-// edited:  09 Aug, 2025
-// author:  Freya
+// edited: 09 Aug, 2025
+// author: Freya
 // readtime: 2 mins
 //
 // content:
-// Paragraph text...
-// (blank line = new paragraph)
-// Single newline = line break within paragraph.
+// (body text)
 function parsePost(raw, filename) {
   const lines = raw.replace(/\r/g, "").split("\n");
   const meta = {};
   let i = 0;
 
-  // Read header lines until we find "content:" (case-insensitive) or hit a blank line
   for (; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue; // skip empty header lines
     if (/^content\s*:\s*$/i.test(line)) { i++; break; }
     const m = line.match(/^([a-zA-Z]+)\s*:\s*(.*)$/);
     if (m) {
-      meta[m[1].toLowerCase()] = m[2].trim();
-    } else {
-      // Not a key: value; treat as unexpected and continue
+      const key = m[1].toLowerCase();
+      const val = m[2].trim();
+      meta[key] = val;
+    } // non key:value lines are ignored until "content:"
+  }
+
+  // Remainder = body
+  let body = lines.slice(i).join("\n").trim();
+
+  // Title: prefer header -> fallback to first line of body
+  let title = (meta.title || "").trim();
+  if (!title) title = deriveTitle(body, filename);
+
+  // If the first non-empty body line equals the title, remove it to avoid duplication
+  if (meta.title) {
+    const arr = body.split("\n");
+    let firstIdx = -1;
+    for (let j = 0; j < arr.length; j++) {
+      if (arr[j].trim().length) { firstIdx = j; break; }
+    }
+    if (firstIdx !== -1) {
+      const candidate = arr[firstIdx].replace(/^#+\s*/, "").trim();
+      if (candidate === meta.title.trim()) {
+        arr.splice(firstIdx, 1);
+        body = arr.join("\n").replace(/^\s*\n/, "").trim();
+      }
     }
   }
 
-  // The remainder is the content body
-  const body = lines.slice(i).join("\n").trim();
-
-  // Title heuristic: first non-empty line of body, else filename
-  const title = deriveTitle(body, filename);
-
-  // Build content nodes: paragraphs split by blank lines; single newline => <br>
+  // Excerpt/preview: prefer header previewtext -> fallback to first paragraph
   const contentNodes = buildContentNodes(body);
-
-  // Excerpt: first 160 chars of the first paragraph (plain text)
-  const firstParaText = getTextFromNodes(buildContentNodes(body, 1));
-  const excerpt = (firstParaText.length > 160)
-    ? firstParaText.slice(0, 157) + "…"
-    : firstParaText || "(No preview)";
+  const excerpt = meta.previewtext && meta.previewtext.trim()
+    ? meta.previewtext.trim()
+    : getTextFromNodes(buildContentNodes(body, 1)).slice(0, 160) + (getTextFromNodes(buildContentNodes(body, 1)).length > 160 ? "…" : "");
 
   return { title, meta, excerpt, contentNodes };
 }
 
 function deriveTitle(body, filename) {
-  // Take the first non-empty line before the first blank line as a possible title
   const lines = body.split("\n");
   for (const l of lines) {
     const s = l.trim();
-    if (s.length) {
-      // If it looks like a heading marker, strip it
-      return s.replace(/^#+\s*/, "");
-    }
+    if (s.length) return s.replace(/^#+\s*/, "");
     if (!s.length) break;
   }
   return filename.replace(/\.[^/.]+$/, "");
@@ -108,15 +117,13 @@ function deriveTitle(body, filename) {
 
 function buildContentNodes(body, limitParagraphs = Infinity) {
   const blocks = body
-    // Split by two or more newlines (blank line = paragraph break)
-    .split(/\n\s*\n/g)
-    .map(b => b.replace(/\s+$/g, "")) // trim right
+    .split(/\n\s*\n/g)           // blank line = new paragraph
+    .map(b => b.replace(/\s+$/g, ""))
     .filter(b => b.trim().length > 0);
 
   const nodes = [];
   for (let idx = 0; idx < blocks.length && idx < limitParagraphs; idx++) {
-    const para = blocks[idx];
-    nodes.push(makeParagraphWithLineBreaks(para));
+    nodes.push(makeParagraphWithLineBreaks(blocks[idx]));
   }
   return nodes;
 }
@@ -129,8 +136,7 @@ function makeParagraph(text) {
 
 function makeParagraphWithLineBreaks(text) {
   const p = document.createElement("p");
-  // single newline => <br>
-  const parts = text.split("\n");
+  const parts = text.split("\n"); // single newline -> <br>
   parts.forEach((seg, i) => {
     p.appendChild(document.createTextNode(seg));
     if (i < parts.length - 1) p.appendChild(document.createElement("br"));
@@ -147,15 +153,16 @@ function getTextFromNodes(nodes) {
 // Render
 function renderAll(posts) {
   const host = qs("#posts");
+  if (!host) return;
   host.innerHTML = "";
 
-  posts.forEach((post, idx) => {
-    const card = renderCard(post, idx);
+  posts.forEach((post) => {
+    const card = renderCard(post);
     host.appendChild(card);
   });
 }
 
-function renderCard(post, idx) {
+function renderCard(post) {
   const card = el("article", { class: "post-card", tabindex: "0", "aria-expanded": "false" });
 
   const headerBtn = el("div", { class: "post-header", role: "button" });

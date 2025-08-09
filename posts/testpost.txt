@@ -1,11 +1,12 @@
+title: First Post!
+previewtext: This is the first post. click to read more...
 written: 09 Aug, 2025
 edited: 09 Aug, 2025
 author: Freya
 readtime: 2 mins
 
 content:
-First Post — Hello World
-This is the text of the blog post, blah blah blah.
+This is the text of the blog post, blah blah blah (text)
 this is a new line!
 
 this is a new paragraph!
