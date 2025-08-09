@@ -10,18 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
     .finally(() => hide("#loading"));
 });
 
-card.addEventListener("click", (e) => {
-  if (e.target.closest("a, button, input, textarea, select")) return;
-  toggleCard(card);
-});
-
-card.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") { 
-    e.preventDefault(); 
-    toggleCard(card); 
-  }
-});
-
 // Load & parse
 async function loadPostsList() {
   const indexUrl = `${POSTS_DIR}/${INDEX_FILE}`;
@@ -177,24 +165,31 @@ function renderAll(posts) {
 function renderCard(post) {
   const card = el("article", { class: "post-card", tabindex: "0", "aria-expanded": "false" });
 
-  const headerBtn = el("div", { class: "post-header", role: "button" });
-  headerBtn.addEventListener("click", () => toggleCard(card));
-  headerBtn.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleCard(card); }
+  card.addEventListener("click", (e) => {
+    if (e.target.closest("a, button, input, textarea, select")) return;
+    toggleCard(card);
   });
 
-  const titleEl = el("h2", { class: "post-title" }, post.title);
-  const metaEl = el("p", { class: "post-meta" }, buildMeta(post.meta));
-  const excerptEl = el("p", { class: "post-excerpt" }, post.excerpt);
+  card.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleCard(card);
+    }
+  });
 
-  headerBtn.appendChild(titleEl);
-  headerBtn.appendChild(metaEl);
+  const header = el("div", { class: "post-header" });
+  const titleEl = el("h2", { class: "post-title" }, post.title);
+  const metaEl  = el("p", { class: "post-meta"  }, buildMeta(post.meta));
+  const excerpt = el("p", { class: "post-excerpt" }, post.excerpt);
+
+  header.appendChild(titleEl);
+  header.appendChild(metaEl);
 
   const content = el("div", { class: "post-content", "aria-hidden": "true" });
   post.contentNodes.forEach(n => content.appendChild(n));
 
-  card.appendChild(headerBtn);
-  card.appendChild(excerptEl);
+  card.appendChild(header);
+  card.appendChild(excerpt);
   card.appendChild(content);
   return card;
 }
@@ -203,6 +198,7 @@ function toggleCard(card) {
   const expanded = card.getAttribute("aria-expanded") === "true";
   const next = !expanded;
   card.setAttribute("aria-expanded", next ? "true" : "false");
+  card.classList.toggle("active", next);
   const content = card.querySelector(".post-content");
   if (content) content.setAttribute("aria-hidden", next ? "false" : "true");
 }
