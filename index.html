@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JRTDB Blog</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+            <h1>JRTDB Blog</h1>
+            <p class="site-tagline">Updates, notes, and dev logs.</p>
+        </header>
+
+        <article class="post-card" role="button" tabindex="0" aria-expanded="false" onclick="togglePost('post1')" onkeydown="handleKey(event, 'post1')">
+            <h2 class="post-title">First Post Test</h2>
+            <p class="post-meta">Posted Aug 9, 2025 · 2 min read</p>
+            <p class="post-excerpt">Welcome to the JRTDB blog hub. Click to expand and read more…</p>
+            <div id="post1" class="post-content" aria-hidden="true">
+                <p>test test</p>
+            </div>
+        </article>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
