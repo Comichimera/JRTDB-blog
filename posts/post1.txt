@@ -1,0 +1,21 @@
+title: Okay, the ACTUAL first post.
+previewtext: I guess to sort of round up what I've been doing to the site lately.
+written: 09 Aug, 2025
+edited: 09 Aug, 2025
+author: Freya
+readtime: 4 mins
+
+content:
+I recently moved this website from GoDaddy to Cloudflare. This site is pretty old, dating back to June 2024, (old for me buying websites at least) and I originally hosted it on GoDaddy because that was the provider I knew from when I first started buying domains.
+
+A few months ago, around January 2025, I realized Cloudflare offered hosting and Cloudflare Pages. I discovered this when I bought a site called SophieMoments.com (just a fun gag website). I decided I wanted to move the JRTDB site to Cloudflare since that's where my other projects and newly purchased domains were going.
+
+I didn't actually make the move right away. The point came when a hard drive failed, the one containing all the website files for JRTDB.com. Luckily, all the public-facing files were still online, so I could just download them. But I had lost the backend architecture, which I had built on Firebase, with GoDaddy as the registrar.
+
+That loss removed the main reason I had been staying with Firebase. With the backend gone, I decided to rebuild everything while moving to Cloudflare. Most of the migration is now done. The only thing missing is an automatic system to insert runs into the "pseudo database" I use. Right now I do it manually. It works, but I'd like to automate it eventually.
+
+I've also been rebuilding the JRT video archive, the runs and records that were lost in the hard drive failure. I want to archive videos in case they're ever taken down. A few months ago, I started planning to implement a proper "view video" feature for records. Right now, if you click view "link" on any record, it doesn't actually show the video. That's on my to-do list, along with finishing the analysis section of the site.
+
+Another feature I've been thinking about is letting people upload their own CSV files for the Full Game Timer, so they can compare against their own splits. There are obvious security stuff with file uploads, so I want to be sure I know exactly what I'm doing before implementing that.
+
+That's basically where I'm at. The move to Cloudflare is done, the core site works, and now I'm just finishing features and rebuilding lost parts.
